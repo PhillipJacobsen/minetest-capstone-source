@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# watcom-make - watcom wrapper for makefiles
+# Copyright (c) 2020, Christopher Jeffrey (MIT License).
+# https://github.com/bcoin-org/libtorsion
+
+export WATCOM=${WATCOM:-/opt/watcom}
+export PATH="$WATCOM/binl:$PATH"
+export INCLUDE="$WATCOM/lh"
+export AR=wlib
+export AS=wasm
+export CC=owcc
+export CXX=owcc
+export LD=wlink
+export OBJDUMP=dmpobj
+export RANLIB=touch
+export STRIP=wstrip
+export WCC386='-wcd=201 -wcd=202'
+export ARFLAGS='-n'
+
+if ! type "$CC" > /dev/null 2>& 1; then
+  echo "$CC is not available!" >& 2
+  exit 1
+fi
+
+exec "$@"

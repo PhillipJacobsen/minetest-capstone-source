@@ -1,0 +1,41 @@
+#!/bin/sh
+
+# wasi-make - wasi wrapper for makefiles
+# Copyright (c) 2020, Christopher Jeffrey (MIT License).
+# https://github.com/bcoin-org/libtorsion
+
+if test x"$WASI" != x; then
+  WASI=`cd "$WASI" && pwd`
+elif test -d /opt/wasi-sdk; then
+  WASI=/opt/wasi-sdk
+elif test -d /opt/local/wasi-sdk; then
+  WASI=/opt/local/wasi-sdk
+elif test -d /usr/lib/wasi-sdk; then
+  WASI=/usr/lib/wasi-sdk
+elif test -d /usr/local/lib/wasi-sdk; then
+  WASI=/usr/local/lib/wasi-sdk
+else
+  echo 'WASI SDK not found!' >& 2
+  exit 1
+fi
+
+export AR="$WASI/bin/llvm-ar"
+export AS="$WASI/bin/clang"
+export CC="$WASI/bin/clang"
+export CPP="$WASI/bin/clang-cpp"
+export CXX="$WASI/bin/clang++"
+export LD="$WASI/bin/wasm-ld"
+export NM="$WASI/bin/llvm-nm"
+export OBJCOPY="$WASI/bin/llvm-objcopy"
+export OBJDUMP="$WASI/bin/llvm-objdump"
+export RANLIB="$WASI/bin/llvm-ranlib"
+export STRINGS="$WASI/bin/llvm-strings"
+export STRIP="$WASI/bin/llvm-strip"
+export ARFLAGS='cr'
+
+if ! "$CC" --version > /dev/null 2>& 1; then
+  echo "$CC is not available!" >& 2
+  exit 1
+fi
+
+exec "$@"

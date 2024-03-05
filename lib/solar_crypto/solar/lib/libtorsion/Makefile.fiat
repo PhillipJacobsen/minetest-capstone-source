@@ -1,0 +1,193 @@
+# Makefile.fiat - fiat makefile for libtorsion
+# Copyright (c) 2020, Christopher Jeffrey (MIT License).
+# https://github.com/bcoin-org/libtorsion
+
+FIAT = $(HOME)/fiat-crypto
+SAT = $(FIAT)/src/ExtractionOCaml/saturated_solinas
+UNSAT = $(FIAT)/src/ExtractionOCaml/unsaturated_solinas
+MONT = $(FIAT)/src/ExtractionOCaml/word_by_word_montgomery
+
+OUTPUT = src/fields/p192_32.h      \
+         src/fields/p192_64.h      \
+         src/fields/p224_32.h      \
+         src/fields/p224_64.h      \
+         src/fields/p256_32.h      \
+         src/fields/p256_64.h      \
+         src/fields/p384_32.h      \
+         src/fields/p384_64.h      \
+         src/fields/p521_32.h      \
+         src/fields/p521_64.h      \
+         src/fields/secp256k1_32.h \
+         src/fields/secp256k1_64.h \
+         src/fields/p25519_32.h    \
+         src/fields/p25519_64.h    \
+         src/fields/p448_32.h      \
+         src/fields/p448_64.h      \
+         src/fields/p251_32.h      \
+         src/fields/p251_64.h      \
+         src/fields/.fiat-head
+
+U_FUNCS = add          \
+          sub          \
+          opp          \
+          carry        \
+          carry_mul    \
+          carry_square \
+          carry_scmul3 \
+          carry_scmul4 \
+          carry_scmul8 \
+          selectznz    \
+          to_bytes     \
+          from_bytes
+
+M_FUNCS = add             \
+          sub             \
+          opp             \
+          mul             \
+          square          \
+          nonzero         \
+          selectznz       \
+          to_montgomery   \
+          from_montgomery \
+          to_bytes        \
+          from_bytes
+
+U_FUNCS_25519 = add               \
+                sub               \
+                opp               \
+                carry             \
+                carry_mul         \
+                carry_square      \
+                carry_scmul3      \
+                carry_scmul4      \
+                carry_scmul8      \
+                carry_scmul121666 \
+                selectznz         \
+                to_bytes          \
+                from_bytes
+
+U_FUNCS_448 = add              \
+              sub              \
+              opp              \
+              carry            \
+              carry_mul        \
+              carry_square     \
+              carry_scmul3     \
+              carry_scmul4     \
+              carry_scmul8     \
+              carry_scmul39082 \
+              carry_scmul39081 \
+              selectznz        \
+              to_bytes         \
+              from_bytes
+
+U_FUNCS_251 = add             \
+              sub             \
+              opp             \
+              carry           \
+              carry_mul       \
+              carry_square    \
+              carry_scmul3    \
+              carry_scmul4    \
+              carry_scmul8    \
+              carry_scmul1174 \
+              selectznz       \
+              to_bytes        \
+              from_bytes
+
+AFTER = sed -e 's;$(FIAT);;g'                                  \
+            -e 's/unsigned __int128/torsion_uint128_t/g'       \
+            -e 's/signed __int128/torsion_int128_t/g'          \
+            -e 's/x2 & arg3/fe_word_barrier(x2) \& arg3/g'     \
+            -e 's/(~x2) & arg2/fe_word_barrier(~x2) \& arg2/g' \
+            -e '$$ d' < $@ > $@.tmp;                           \
+        mv -f $@.tmp $@;
+
+all: $(OUTPUT)
+
+# 2^192 - 2^64 - 1
+src/fields/p192_32.h: $(UNSAT)
+	$(UNSAT) --static p192 32 9 '2^192 - 2^64 - 1' $(U_FUNCS) > $@
+	$(AFTER)
+
+src/fields/p192_64.h: $(UNSAT)
+	$(UNSAT) --static p192 64 4 '2^192 - 2^64 - 1' $(U_FUNCS) > $@
+	$(AFTER)
+
+# 2^224 - 2^96 + 1
+src/fields/p224_32.h: $(MONT)
+	$(MONT) --static p224 32 '2^224 - 2^96 + 1' $(M_FUNCS) > $@
+	$(AFTER)
+
+src/fields/p224_64.h: $(MONT)
+	$(MONT) --static p224 64 '2^224 - 2^96 + 1' $(M_FUNCS) > $@
+	$(AFTER)
+
+# 2^256 - 2^224 + 2^192 + 2^96 - 1
+src/fields/p256_32.h: $(MONT)
+	$(MONT) --static p256 32 '2^256 - 2^224 + 2^192 + 2^96 - 1' $(M_FUNCS) > $@
+	$(AFTER)
+
+src/fields/p256_64.h: $(MONT)
+	$(MONT) --static p256 64 '2^256 - 2^224 + 2^192 + 2^96 - 1' $(M_FUNCS) > $@
+	$(AFTER)
+
+# 2^384 - 2^128 - 2^96 + 2^32 - 1
+src/fields/p384_32.h: $(MONT)
+	$(MONT) --static p384 32 '2^384 - 2^128 - 2^96 + 2^32 - 1' $(M_FUNCS) > $@
+	$(AFTER)
+
+src/fields/p384_64.h: $(MONT)
+	$(MONT) --static p384 64 '2^384 - 2^128 - 2^96 + 2^32 - 1' $(M_FUNCS) > $@
+	$(AFTER)
+
+# 2^521 - 1
+src/fields/p521_32.h: $(UNSAT)
+	$(UNSAT) --static p521 32 19 '2^521 - 1' $(U_FUNCS) > $@
+	$(AFTER)
+
+src/fields/p521_64.h: $(UNSAT)
+	$(UNSAT) --static p521 64 9 '2^521 - 1' $(U_FUNCS) > $@
+	$(AFTER)
+
+# 2^256 - 2^32 - 977
+src/fields/secp256k1_32.h: $(UNSAT)
+	$(UNSAT) --static --tight-bounds-mul-by '1.1' secp256k1 32 12 '2^256 - 2^32 - 977' $(U_FUNCS) > $@
+	$(AFTER)
+
+src/fields/secp256k1_64.h: $(UNSAT)
+	$(UNSAT) --static secp256k1 64 6 '2^256 - 4294968273' $(U_FUNCS) > $@
+	$(AFTER)
+
+# 2^255 - 19
+src/fields/p25519_32.h: $(UNSAT)
+	$(UNSAT) --static p25519 32 10 '2^255 - 19' $(U_FUNCS_25519) > $@
+	$(AFTER)
+
+src/fields/p25519_64.h: $(UNSAT)
+	$(UNSAT) --static p25519 64 5 '2^255 - 19' $(U_FUNCS_25519) > $@
+	$(AFTER)
+
+# 2^448 - 2^224 - 1
+src/fields/p448_32.h: $(UNSAT)
+	$(UNSAT) --static p448 32 18 '2^448 - 2^224 - 1' $(U_FUNCS_448) > $@
+	$(AFTER)
+
+src/fields/p448_64.h: $(UNSAT)
+	$(UNSAT) --static p448 64 8 '2^448 - 2^224 - 1' $(U_FUNCS_448) > $@
+	$(AFTER)
+
+# 2^251 - 9
+src/fields/p251_32.h: $(UNSAT)
+	$(UNSAT) --static p251 32 10 '2^251 - 9' $(U_FUNCS_251) > $@
+	$(AFTER)
+
+src/fields/p251_64.h: $(UNSAT)
+	$(UNSAT) --static p251 64 5 '2^251 - 9' $(U_FUNCS_251) > $@
+	$(AFTER)
+
+src/fields/.fiat-head: $(UNSAT) $(MONT)
+	(cd $(FIAT) && git rev-parse HEAD) > $@
+
+clean:
+	-rm -f $(OUTPUT) $(OUTPUT:.h=.h.tmp)
